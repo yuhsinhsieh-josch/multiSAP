@@ -9,3 +9,5 @@ submit_snakejob.sh
 resources/AMULET/__pycache__/peakoverlap.cpython-36.pyc
 ._*
 config/._*
+config/samples-all.tsv
+config/units-all.tsv
