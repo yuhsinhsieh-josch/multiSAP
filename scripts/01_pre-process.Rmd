@@ -361,23 +361,25 @@ VariantPlot(
                           strand_correlation > params$strand_correlation &
                           # vmr >= vmr.thres &
                           variant %ni% c("301A>C", "302A>C", "310T>C", "316G>C")) %>% pull(variant)
-  mmat <- mmat[var,]
+  mmat_filtered <- mmat[var,]
 
 ```
 
 ```{r, include=FALSE}
 # save RDS file
 saveRDS(mmat, file.path(params$directory, params$sample, "signac", paste0(params$sample, "_mmat.rds" )))
+saveRDS(mmat_filtered, file.path(params$directory, params$sample, "signac", paste0(params$sample, "_mmat_filtered.rds" )))
+
 ```
 
 **Mitochondrial variant pseduobulk heteroplasmy rank plot**
 
-The plot below shows the rank pseduobulk heteroplasmy, and the variants with more than pseduobulk heteroplasmy 5% were labeled. Homoplasmic variants were removed by filtering out variant with variant-mean ratio less than 0.01.
+The plot below shows the rank pseduobulk heteroplasmy, and the variants with more than pseduobulk heteroplasmy 1% were labeled. Homoplasmic variants were removed by filtering out variant with variant-mean ratio less than 0.01.
 ```{r, message=FALSE, warning=FALSE, fig.width=4, fig.height=4}
-mtVAR.meta <- as.data.frame(rowData(mmat))
+mtVAR.meta <- as.data.frame(rowData(mmat_filtered))
 mtVAR.meta %>% filter(vmr >= 0.01) %>% 
   arrange(desc(mean)) %>% mutate(rank = 1:n()) %>% 
-  mutate(label = ifelse(mean > 0.05, variant, NA)) %>% 
+  mutate(label = ifelse(mean > 0.01, variant, NA)) %>% 
   ggplot(aes(x = rank, y = mean*100, label=label)) +
   geom_point() + theme_classic() + ggrepel::geom_label_repel() +
   labs(x = "Rank ordered mutations", y = "pseduobulk heteroplasmy (%)") 
@@ -413,7 +415,7 @@ if(file.exists(params$haplogroup)){
 
 **List of high-confident heteroplasmic variant**
 ```{r}
-mtVAR.meta %>% filter(vmr >= 0.01, n_cells_conf_detected >= params$n_cells_conf_detected) %>% arrange(desc(mean)) %>%
+mtVAR.meta %>% filter(vmr >= 0.01, n_cells_conf_detected >= 5) %>% arrange(desc(mean)) %>%
   DT::datatable(rownames=FALSE, 
                 extensions = 'Buttons', 
                 options = list(dom='frtBip', buttons = c('csv')))
