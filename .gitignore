@@ -11,3 +11,5 @@ resources/AMULET/__pycache__/peakoverlap.cpython-36.pyc
 config/._*
 config/samples-all.tsv
 config/units-all.tsv
+*.mro
+*mtMultiome

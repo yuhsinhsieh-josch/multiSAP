@@ -51,7 +51,12 @@ rule cellranger_count:
         --reference={params.reference} \
         --libraries={input.csv} 2> {log.err} > {log.out}
         mv {wildcards.sample}/* {OUTDIR}/{wildcards.sample}/cellranger_count
+        rm -rf {OUTDIR}/{wildcards.sample}/cellranger_count/_*
+        rm -rf {OUTDIR}/{wildcards.sample}/cellranger_count/*mri.tgz
+        rm -rf {OUTDIR}/{wildcards.sample}/cellranger_count/SC_ATAC_GEX_COUNTER_CS
+        rm -rf {OUTDIR}/{wildcards.sample}/cellranger_count/outs/analysis
+        rm -rf {OUTDIR}/{wildcards.sample}/cellranger_count/outs/cloupe.cloupe
         touch {OUTDIR}/{wildcards.sample}/cellranger_count/cellranger.finish
-        rm -r {wildcards.sample}
+        rm -rf {wildcards.sample}
         {DATETIME} >> {log.time} 
         """
