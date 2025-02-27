@@ -12,10 +12,15 @@ def get_fastq_dir(wc):
     return directory
 
 def get_fastq_ATAC(wc):
+    # Get the directory specific to the current sample
     directory=units.loc[wc.sample]['fqs'] + "/ATAC"
+    # Ensure the file pattern is scoped to the current sample
     s = wc.sample + "_"
-    samples = [file.split(s)[1].split('.fastq.gz')[0] for file in os.listdir(directory) if re.match(s, file)]
-    return list(set(samples))
+    # List files in the directory and filter those matching the sample pattern
+    files = os.listdir(directory)
+    samples = [file.split(s)[1].split('.fastq.gz')[0] for file in files if re.match(s, file)]
+    # Print for debugging purposes to ensure correct files are being picked up
+    return list(set(samples))   # Return unique samples
 
 def get_fastq_GEX(wc):
      directory=units.loc[wc.sample]['fqs'] + "/GEX"
@@ -26,43 +31,43 @@ def get_fastq_GEX(wc):
 # -- Rules -- #
 rule fastqc_GEX:
     input:
-        fq=lambda wc: expand("{DIR}/{library_type}/{{sample}}_{library_type}_{{name}}.fastq.gz", DIR = units.loc[wc.sample]['fqs'], library_type = ['GEX'])
+        fq=lambda wc: expand("{DIR}/{library_type}/{{sample}}_{library_type}_{{name_GEX}}.fastq.gz", DIR = units.loc[wc.sample]['fqs'], library_type = ['GEX'])
     output:
-        html=expand("{OUTDIR}/{{sample}}/qc/fastqc/{{sample}}_{library_type}_{{name}}_fastqc.html", OUTDIR=OUTDIR, library_type = ['GEX']),
-        zip=expand("{OUTDIR}/{{sample}}/qc/fastqc/{{sample}}_{library_type}_{{name}}_fastqc.zip", OUTDIR=OUTDIR, library_type = ['GEX'])
+        html=expand("{OUTDIR}/{{sample}}/qc/fastqc/{{sample}}_{library_type}_{{name_GEX}}_fastqc.html", OUTDIR=OUTDIR, library_type = ['GEX']),
+        zip=expand("{OUTDIR}/{{sample}}/qc/fastqc/{{sample}}_{library_type}_{{name_GEX}}_fastqc.zip", OUTDIR=OUTDIR, library_type = ['GEX'])
     params:
         lambda wc: "-t {}".format(get_resource("fastqc","threads")) 
     resources:
         mem_mb=get_resource("fastqc", "mem_mb"),
         walltime=get_resource("fastqc", "walltime")
     log:
-        "{}/{{sample}}/fastqc_{{sample}}_{{name}}.log".format(LOGDIR)
+        "{}/{{sample}}/fastqc_{{sample}}_{{name_GEX}}.log".format(LOGDIR)
     benchmark:
-        "{}/{{sample}}/fastqc_{{sample}}_{{name}}.bmk".format(LOGDIR)
+        "{}/{{sample}}/fastqc_{{sample}}_{{name_GEX}}.bmk".format(LOGDIR)
     threads: 
         threads=get_resource("fastqc", "threads")
     wrapper:
-        "v1.23.1/bio/fastqc"
+        "v4.7.3/bio/fastqc"
 
 rule fastqc_ATAC:
     input:
-        fq= lambda wc: expand("{DIR}/{library_type}/{{sample}}_{library_type}_{{name}}.fastq.gz", DIR = units.loc[wc.sample]['fqs'], library_type = ['ATAC'])
+        fq= lambda wc: expand("{DIR}/{library_type}/{{sample}}_{library_type}_{{name_ATAC}}.fastq.gz", DIR = units.loc[wc.sample]['fqs'], library_type = ['ATAC'])
     output:
-        html=expand("{OUTDIR}/{{sample}}/qc/fastqc/{{sample}}_{library_type}_{{name}}_fastqc.html", OUTDIR=OUTDIR, library_type = ['ATAC']),
-        zip=expand("{OUTDIR}/{{sample}}/qc/fastqc/{{sample}}_{library_type}_{{name}}_fastqc.zip", OUTDIR=OUTDIR, library_type = ['ATAC'])
+        html=expand("{OUTDIR}/{{sample}}/qc/fastqc/{{sample}}_{library_type}_{{name_ATAC}}_fastqc.html", OUTDIR=OUTDIR, library_type = ['ATAC']),
+        zip=expand("{OUTDIR}/{{sample}}/qc/fastqc/{{sample}}_{library_type}_{{name_ATAC}}_fastqc.zip", OUTDIR=OUTDIR, library_type = ['ATAC'])
     params:
         lambda wc: "-t {}".format(get_resource("fastqc","threads")) 
     resources:
         mem_mb=get_resource("fastqc", "mem_mb"),
         walltime=get_resource("fastqc", "walltime")
     log:
-        "{}/{{sample}}/fastqc_{{sample}}_{{name}}.log".format(LOGDIR)
+        "{}/{{sample}}/fastqc_{{sample}}_{{name_ATAC}}.log".format(LOGDIR)
     benchmark:
-        "{}/{{sample}}/fastqc_{{sample}}_{{name}}.bmk".format(LOGDIR)
+        "{}/{{sample}}/fastqc_{{sample}}_{{name_ATAC}}.bmk".format(LOGDIR)
     threads: 
         threads=get_resource("fastqc", "threads")
     wrapper:
-        "v1.23.1/bio/fastqc"
+        "v4.7.3/bio/fastqc"
 
 rule fastq_screen_indexes:
     output:
@@ -107,20 +112,25 @@ rule fastq_screen:
     wrapper:
         "v1.23.4/bio/fastq_screen"
 
+
 def multiqc_input(wc):
-    f=expand("{OUTDIR}/{{sample}}/qc/fastqc/{{sample}}_{name}_fastqc.zip", OUTDIR=OUTDIR, name = get_fastq_ATAC(wc))
-    f+=expand("{OUTDIR}/{{sample}}/qc/fastqc/{{sample}}_{name}_fastqc.zip", OUTDIR=OUTDIR, name = get_fastq_GEX(wc)) 
+    # Get ATAC and GEX names for the current sample
+    name_ATAC = get_fastq_ATAC(wc)
+    name_GEX = get_fastq_GEX(wc)
+    # Use expand to generate the input files for both ATAC and GEX
+    f=expand("{OUTDIR}/{sample}/qc/fastqc/{sample}_{name_ATAC}_fastqc.zip", OUTDIR=OUTDIR, sample = wc.sample, name_ATAC = name_ATAC)
+    f+=expand("{OUTDIR}/{sample}/qc/fastqc/{sample}_{name_GEX}_fastqc.zip", OUTDIR=OUTDIR, sample = wc.sample, name_GEX = name_GEX) 
     try: 
         if config["parameters"]["fastq_screen"]["enabled"]:
-            f +=expand("{OUTDIR}/{{sample}}/qc/fastq_screen/{{sample}}.{name}.fastq_screen.txt", OUTDIR=OUTDIR, name=get_fastq_ATAC(wc))
-            f +=expand("{OUTDIR}/{{sample}}/qc/fastq_screen/{{sample}}.{name}.fastq_screen.txt", OUTDIR=OUTDIR, name=get_fastq_GEX(wc))
+            f +=expand("{OUTDIR}/{sample}/qc/fastq_screen/{sample}.{name_ATAC}.fastq_screen.txt", OUTDIR=OUTDIR, sample = wc.sample, name_ATAC=name_ATAC)
+            f +=expand("{OUTDIR}/{sample}/qc/fastq_screen/{sample}.{name_GEX}.fastq_screen.txt", OUTDIR=OUTDIR, sample = wc.sample, name_GEX=name_GEX)
     except KeyError:
         print("FASTQ_SCREEN disabled by config file. Skipping...")
     return f
 
 rule multiqc:
     input:
-        multiqc_input
+        multiqc_input,
     output:
         report(f"{OUTDIR}/{{sample}}/qc/multiqc_report.html", category="1_QC")
     params: 
@@ -134,4 +144,4 @@ rule multiqc:
         mem_mb=get_resource("multiqc","mem_mb"),
         walltime=get_resource("multiqc","walltime")
     wrapper:
-        "v2.9.0/bio/multiqc"
+        "v4.7.3/bio/multiqc"

@@ -47,6 +47,7 @@ rule cellranger_count:
     shell:
         """
         {DATETIME} > {log.time} &&
+        cd {OUTDIR}/{wildcards.sample}
         cellranger-arc count --id={wildcards.sample} \
         --reference={params.reference} \
         --libraries={input.csv} 2> {log.err} > {log.out}

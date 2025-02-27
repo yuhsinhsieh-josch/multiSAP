@@ -12,4 +12,4 @@ export TMPDIR=/fast/users/${USER}/scratch/tmp
 set -x
 
 snakemake --use-conda --use-envmodules --jobs 100 --profile hpc-cluster -k -p --rerun-triggers mtime
-# snakemake --use-conda --conda-create-envs-only --conda-frontend mamba --profile cubi-v1
+# snakemake --use-conda --conda-create-envs-only --conda-frontend mamba --profile cubi-v1 -j 100

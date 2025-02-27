@@ -55,8 +55,8 @@ def get_integration_amulet(wc):
 rule all:
     input:
         expand(["{OUTDIR}/{sample}/cellranger_count/cellranger.finish",
-                "{OUTDIR}/{sample}/qc/multiqc_report.html",
-                "{OUTDIR}/{sample}/mgatk/final/{sample}.variant_stats.tsv.gz",
+                # "{OUTDIR}/{sample}/qc/multiqc_report.html",
+                "{OUTDIR}/{sample}/mgatk/final/mgatk.rds",
                 "{OUTDIR}/{sample}/amulet/MultipletBarcodes_01.txt",
                 "{OUTDIR}/{sample}/cellbender/cellbender_output_file.h5",
                 "{OUTDIR}/{sample}/signac/01_preprocessing_{sample}.html"
@@ -64,7 +64,7 @@ rule all:
 
 # -- Rule files -- #
 include: "rules/cellranger.smk"
-include: "rules/qc.smk"
+#include: "rules/qc.smk"
 include: "rules/mgatk.smk"
 include: "rules/amulet.smk"
 include: "rules/signac.smk"

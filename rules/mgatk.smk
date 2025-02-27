@@ -25,7 +25,7 @@ rule mgatk:
     params:
         bam="{}/{{sample}}/cellranger_count/outs/atac_possorted_bam.bam".format(OUTDIR)
     output:
-        ref="{}/{{sample}}/mgatk/final/{{sample}}.variant_stats.tsv.gz".format(OUTDIR)
+        ref="{}/{{sample}}/mgatk/final/mgatk.rds".format(OUTDIR)
     conda:
         "../envs/mgatk.yaml"
     threads: get_resource("mgatk", "threads")
@@ -42,5 +42,5 @@ rule mgatk:
         export LC_ALL=C.UTF-8
         export LANG=C.UTF-8
         # run mgatk command
-        mgatk tenx -i {params.bam} -n {wildcards.sample} -o {OUTDIR}/{wildcards.sample}/mgatk -bt CB -b {input.tsv} 
+        mgatk tenx -i {params.bam}  -o {OUTDIR}/{wildcards.sample}/mgatk -bt CB -b {input.tsv} 
         """
