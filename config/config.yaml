@@ -1,0 +1,94 @@
+# This file should contain everything to configure the workflow on a global scale.
+# It should be complemented by a samples.tsv file that contains one row per sample.
+# The units.tsv file should contain the location of each project folder
+# (containing fastq files).
+
+# -- 1. Samples configuration -- #
+samples: "config/samples.tsv"
+units: "config/units.tsv"
+out: "/data/cephfs-1/work/groups/ludwig/scratch/IGVF/out"
+log: "/data/cephfs-1/work/groups/ludwig/scratch/IGVF/log" 
+
+# -- 2. Program configuration -- # Configure the correspondent environmental modules and program paths for version control
+envmodules:
+    cellranger: "/data/cephfs-1/work/groups/ludwig/Modules/modulefiles/cellranger-arc/2.0.2"
+
+# -- 3. Analysis parameters -- #
+# --- a. QC --- #
+fastq_screen:
+      enabled: False
+      index_dir: "/data/gpfs-1/users/cofu10_c/scratch/P1813/fastq_indexes"
+multiqc: "--config config/multiqc_config.yaml"
+
+# --- b. Alignment --- #
+cellranger:
+    reference: "/data/cephfs-1/work/groups/ludwig/genome_ref/refdata-cellranger-arc-GRCh38-2020-mtMask"
+
+# --- c. Doublet identification --- #
+amulet:
+    autosomes: "/data/cephfs-1/work/groups/ludwig/software/AMULET/human_autosomes.txt"
+    blacklist: "/data/cephfs-1/work/groups/ludwig/genome_ref/ENCODE_blacklist/GRCh38_unified_blacklist.bed"
+
+# --- d. (optional) Mitochondrial variant identification --- #
+mgatk:
+   enable: TRUE 
+
+# --- e. Sample INTEGRATION and pre-processing --- #
+signac:
+  enable: TRUE
+  qc:
+    ncount_atac_min: 1000
+    ncount_rna_min: 1000
+    ncount_atac_max: 25000 
+    ncount_rna_max: 20000
+    nuclesome_signal: 2
+    tss_enrichment: 3
+    percent_mt: 10
+  mito:
+    min_depth: 10
+    n_cells_conf_detected: 1
+    strand_correlation: 0.65
+    min_cell_var: 5
+  annotation:
+    reference: "/data/cephfs-1/work/groups/ludwig/bridge_annotation/pbmc/pbmc_multimodal.h5seurat"
+    haplogroup: "/data/cephfs-1/home/users/yhsieh_m/ludwig/genome_ref/2023-07-15_haplogroup_simple.tsv"
+
+cellbender:
+  enable: TRUE
+  params:
+    fpr: 0.01
+    epochs: 150 
+    expected_cells: 50000 
+    learning_rate: 5e-5 #default 1e-4
+    extra: "--exclude-feature-types Peaks"
+
+# -- Cluster resources configuration -- #
+resources:
+    default:
+        threads: 1
+        walltime: 480
+        mem_mb: 8000
+    fastqc:
+        threads: 4
+        mem_mb: 32000
+    fastq_screen:
+      threads: 8
+    cellranger:
+        threads: 8
+        mem_mb: 64000
+        walltime: 7200
+    mgatk:
+        threads: 8
+        mem_mb: 64000
+        walltime: 7200
+    amulet:
+        threads: 4
+        mem_mb: 64000
+        walltime: 1140
+    signac:
+        threads: 2
+        mem_mb: 120000
+        walltime: 7200
+    cellbender:
+        threads: 2
+        walltime: 7240

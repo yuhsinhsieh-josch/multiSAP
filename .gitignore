@@ -1,9 +1,6 @@
 .snakemake/
 slurm-*.out
 *ckpt*
-config/config.yaml
-config/samples.tsv
-config/units.tsv
 config/.Rapp.history
 submit_snakejob.sh
 resources/AMULET/__pycache__/peakoverlap.cpython-36.pyc
