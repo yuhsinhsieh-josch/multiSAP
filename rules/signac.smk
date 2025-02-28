@@ -4,7 +4,7 @@ if config["signac"]["enable"]:
     rule step1_preprocess:
         input:
             finish="{}/{{sample}}/cellranger_count/cellranger.finish".format(OUTDIR),
-            ref="{}/{{sample}}/mgatk/final/{{sample}}.variant_stats.tsv.gz".format(OUTDIR),
+            ref="{}/{{sample}}/mgatk/final/mgatk.rds".format(OUTDIR),
             amulet="{}/{{sample}}/amulet/MultipletBarcodes_01.txt".format(OUTDIR)
         output:
             report="{}/{{sample}}/signac/01_preprocessing_{{sample}}.html".format(OUTDIR)

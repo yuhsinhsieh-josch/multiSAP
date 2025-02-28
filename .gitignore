@@ -13,3 +13,7 @@ config/samples-all.tsv
 config/units-all.tsv
 *.mro
 *mtMultiome
+*/.ipynb_checkpoints
+.ipynb_checkpoints
+*/.ipynb_checkpoints/*
+.ipynb_checkpoints/*
